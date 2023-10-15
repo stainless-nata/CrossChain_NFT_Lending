@@ -3,7 +3,7 @@ pragma solidity ^0.8.18;
 
 /* Imports Here */
 import {IBridge} from "./IBridge.sol";
-import {IERC721} from "lib/openzeppelin-contracts/contracts/token/ERC721";
+import {IERC721} from "https://github.com/OpenZeppelin/openzeppelin-contracts/blob/master/contracts/token/ERC721/ERC721.sol";
 import {DUSD} from "./DUSD.sol";
 
 
@@ -28,7 +28,7 @@ contract LendBorrow {
     80001 => Mumbai 
     97 => BSC Testnet
     */
-    uint32[3] public constant chainIds  = [5,80001,97];
+    uint32[3] public chainIds  = [5,80001,97];
 
     /* State Variables */
     address public immutable i_owner;
@@ -58,7 +58,6 @@ contract LendBorrow {
     constructor(address _owner) {
         i_owner = _owner;
         dusdContract = new DUSD();
-        dusd_Address = address(dusdContract);
     }
 
     function setBridge(address payable _bridge) external {
@@ -71,7 +70,7 @@ contract LendBorrow {
         bridge = _bridge;
     }
 
-    function floorPriceOfNFT(address tokenContractAddress, uint256 tokenID, uint256 DUSD_NFT_WORTH) external returns(DUSD_NFT_WORTH){
+    function floorPriceOfNFT(address tokenContractAddress, uint256 tokenID, uint256 DUSD_NFT_WORTH) public returns(uint256){
         if(msg.sender != i_owner){
             revert LendBorrow_AddressIsNotOwner_Error();
         }
@@ -82,8 +81,10 @@ contract LendBorrow {
 
     }
 
-    function setTokenValue(address tokenContractAddress, uint256 tokenID) external{
-        contractAddressToTokenIdToDUSDBorrowableAmount[tokenContractAddress][tokenID]= floorPriceOfNFT(tokenContractAddress,tokenID)*0.7;
+    function setTokenValue(address tokenContractAddress, uint256 tokenID) external {
+        bytes32 bytesValue = calculateBytes32ValueFromTokenWithoutBorrower(tokenID, tokenContractAddress);
+        uint256 DUSDBorrowableAmount = (bytes32OfTokenToFloorPriceOfTokenAtTimeOfDepositing[bytesValue] * 7e17) / 10;
+        contractAddressToTokenIdToDUSDBorrowableAmount[tokenContractAddress][tokenID] = DUSDBorrowableAmount;
     }
 
     // Native Chain function only
@@ -169,7 +170,7 @@ contract LendBorrow {
         }
     }
 
-    function addBorrowingPowerByBridge(address borrowerAddress,uint256 DUSD_AMOUNT,uint32 _origin) external{
+    function addBorrowingPowerByBridge(address borrowerAddress,uint256 DUSD_AMOUNT) external{
         require(
             msg.sender == bridge,
             "ERC721Multichain: Only bridge can call this function"
@@ -178,7 +179,7 @@ contract LendBorrow {
         borrowingPowerInUSD[borrowerAddress] = DUSD_AMOUNT;
     }
 
-    function removeBorrowingPowerByBridge(address borrowerAddress,uint256 DUSD_AMOUNT,uint32 _origin) external{
+    function removeBorrowingPowerByBridge(address borrowerAddress) external{
         require(
             msg.sender == bridge,
             "ERC721Multichain: Only bridge can call this function"
@@ -294,7 +295,7 @@ contract LendBorrow {
 
         uint256 NFTValueAtTimeOfDeposit = bytes32OfTokenToFloorPriceOfTokenAtTimeOfDepositing[bytes32OftokenAndTokenContractAddress];
 
-        uint256 NFTValueRightNow = NFTValueAtTimeOfDeposit - (NFTValueAtTimeOfDeposit*0.1);
+        uint256 NFTValueRightNow = NFTValueAtTimeOfDeposit - (NFTValueAtTimeOfDeposit / 10);
 
         uint256 healthFactor = NFTValueAtTimeOfDeposit/NFTValueRightNow;
 
@@ -307,7 +308,7 @@ contract LendBorrow {
 
     }
 
-    function calculateBytes32ValueFromTokenIdAndTokenContractAddress(address borrowerAddress) internal returns(bytes32){
+    function calculateBytes32ValueFromTokenIdAndTokenContractAddress(address borrowerAddress) internal view returns(bytes32){
         OriginalToken memory token = ownerOfOrignalTokens[borrowerAddress];
         address tokenContractAddress = token.tokenAddress;
         uint256 token_id = token.tokenId;
@@ -315,7 +316,7 @@ contract LendBorrow {
         return(bytes32OfTokenIdAndTokenAddress);
     }
 
-    function calculateBytes32ValueFromTokenWithoutBorrower(uint256 token_id , address tokenContractAddress) internal returns(bytes32){
+    function calculateBytes32ValueFromTokenWithoutBorrower(uint256 token_id , address tokenContractAddress) internal pure returns(bytes32){
         bytes32 bytes32OfTokenIdAndTokenAddress = bytes32(abi.encode(token_id,tokenContractAddress));
         return(bytes32OfTokenIdAndTokenAddress);
     }
