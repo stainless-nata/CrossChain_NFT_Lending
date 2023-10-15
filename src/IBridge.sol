@@ -7,27 +7,20 @@ import "./IMessageRecipient.sol";
 // All the messages will be sent and receive message between contracts
 
 interface IBridge is IMessageRecipient {
-    function quoteFeeTransfer(uint32 destination) external view returns (uint256);
-    function quoteFeeMint(uint32 destination) external view returns (uint256);
-    function quoteFeeBurn(uint32 destination) external view returns (uint256);
+    function quoteFeeAddBorrowingPowerSend(uint32 destination) external view returns (uint256);
+    function quoteFeeRemoveBorrowingPowerSend(uint32 destination) external view returns (uint256);
 
-    function transfer(
+    function AddBorrowingPowerSend(
         uint32 _destination,
-        uint256 _tokenId,
+        uint256 _DUSD_AMOUNT,
         address _to,
-        address _refundAddress
+        address _borrowerAddress
     ) external payable;
 
-    function mint(
+    function RemoveBorrowingPowerSend(
         uint32 _destination,
-        uint256 _tokenId,
+        uint256 _DUSD_AMOUNT,
         address _to,
-        address _refundAddress
-    ) external payable;
-
-    function burn(
-        uint32 _destination,
-        uint256 _tokenId,
-        address _refundAddress
+        address _borrowerAddress
     ) external payable;
 }
