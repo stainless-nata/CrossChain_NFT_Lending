@@ -3,7 +3,7 @@ pragma solidity ^0.8.20;
 
 /* Imports Here */
 import {IBridge} from "./IBridge.sol";
-import {IERC721} from "https://github.com/OpenZeppelin/openzeppelin-contracts/blob/master/contracts/token/ERC721/ERC721.sol";
+import {IERC721} from "lib/openzeppelin-contracts/contracts/token/ERC721";
 import {DUSD} from "./DUSD.sol";
 
 
