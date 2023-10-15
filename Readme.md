@@ -1,7 +1,7 @@
 POC
     1. LendBorrow.sol *3
        *Bridge Instance for Native Bridge contract 
-       *chainlink NFT floor price feed => Contract Instance ***
+       Will keep a mapping of OrignalNFTContractAddress to TokenID to DUSD amount right now
        *public Mapping of owner address to struct{tokenID,tokenContractAddress}  (Populate only on Main Chain )
        *mapping of address to borrowing power (Will be Poluated for All chains)
        *mapping of Borrowed address to amount Loan(Amount)     (Populate only on Main Chain)
@@ -10,7 +10,7 @@ POC
        A. TakeLoan Function { 
           A1. Sub function (Give Lending power)
             - take orignal NFT ownership to contract.
-            - *check floor price of NFT Chainlink function call ***
+            - *check the DUSD borrowable amount from mapping ***
             - Use Bridge to inform all other chains the borrowing power(In terms of DUSUD) of that owner (MAILBOX) populate mapping(borrowing power) on this contract and use bridge tell other bridges to give this address borrowing power (To populate mapping on All Chains)
             - // Security check then we will store timestamp of 
 
@@ -28,7 +28,7 @@ POC
                 - Check mapping of Borrowed address to amount borrowed Loan Amount if he has loan then check the provided tokens and the Loan amount is same then take tokens
                 - Thrash the mapping of Borrowed address to Loan amount for borrower.    (Poulate Mapping on Main Chain)
                 - Also thrash the mapping of NFT ownership (Ref=> public Mapping of owner address to struct{tokenID,tokenContractAddress}). (Poulate Mapping on Main Chain)
-                - Also thrash the mapping of bytes32(nft_tokenID, TokenContract Address) to borrowed Loan amount.     (Poulate Mapping on Main Chain)
+                - Also thrash the mapping of bytes32(abi.encode(nft_tokenID, TokenContract Address)) to borrowed Loan amount.     (Poulate Mapping on Main Chain)
                 - Also give back ownership of NFT to borrower
            } 
 
