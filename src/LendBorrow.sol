@@ -121,15 +121,15 @@ contract LendBorrow {
         borrowingPowerInUSD[msg.sender] = DUSD_LOAN_AMOUNT;
 
         // Giving borrowing power on all chain
-        for (uint i = 0; i < chainIds.length; i++){
+        for (uint32 i = 0; i < chainIds.length; i++){
             // Except this chain execute call for all two remaining chains
             if(block.chainid != chainIds[i]){
                 uint32 chainId = chainIds[i];
                 uint256 fee = IBridge(bridge).quoteFeeAddBorrowingPowerSend(chainId);
                 IBridge(bridge).AddBorrowingPowerSend{value:fee}(
                     chainId,
-                    DUSD_LOAN_AMOUNT,
-                    msg.sender, // msg.sender can get this much DUSD
+                    DUSD_LOAN_AMOUNT,// msg.sender can get this much DUSD
+                    msg.sender, // Who will get this DUSD
                     msg.sender // Refund Address
                 );
             }
@@ -157,12 +157,12 @@ contract LendBorrow {
                 // Except this chain execute call for all two remaining chains
                 if(block.chainid != chainIds[i]){
                     uint32 chainId = chainIds[i];
-                    uint256 fee = IBridge(bridge).quoteFeeAddBorrowingPowerSend(chainId);
+                    uint256 fee = IBridge(bridge).quoteFeeRemoveBorrowingPowerSend(chainId);
                     IBridge(bridge).RemoveBorrowingPowerSend{value:fee}(
                         chainId,
                         loanDUSD,
-                        msg.sender, // msg.sender can get this much DUSD
-                        msg.sender // Refund Address
+                        msg.sender, 
+                        msg.sender 
                     );
                 }
             }
@@ -221,12 +221,12 @@ contract LendBorrow {
             // Except this chain execute call for all two remaining chains
             if(block.chainid != chainIds[i]){
                 uint32 chainId = chainIds[i];
-                uint256 fee = IBridge(bridge).quoteFeeAddBorrowingPowerSend(chainId);
+                uint256 fee = IBridge(bridge).quoteFeeRemoveBorrowingPowerSend(chainId);
                 IBridge(bridge).RemoveBorrowingPowerSend{value:fee}(
                     chainId,
                     loanDUSD,
-                    msg.sender, // msg.sender can get this much DUSD
-                    msg.sender // Refund Address
+                    msg.sender, 
+                    msg.sender 
                 );
             }
         }

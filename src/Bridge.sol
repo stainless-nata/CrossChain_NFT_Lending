@@ -21,19 +21,19 @@ contract Bridge {
     constructor(address _mailbox, address _igp, address _lendBorrow) {
         mailbox = IMailbox(_mailbox);
         igp = IInterchainGasPaymaster(_igp);
-        erc721 = LendBorrow(_lendBorrow);
+        lendBorrow = LendBorrow(_lendBorrow);
     }
 
     function quoteFeeAddBorrowingPowerSend(
         uint32 destination
     ) external view returns (uint256) {
-        return igp.quoteGasPayment(destination, GAS_LIMIT_TRANSFER);
+        return igp.quoteGasPayment(destination, GAS_LIMIT_ADDBORROWINGPOWER);
     }
 
     function quoteFeeRemoveBorrowingPowerSend(
         uint32 destination
     ) external view returns (uint256) {
-        return igp.quoteGasPayment(destination, GAS_LIMIT_TRANSFER);
+        return igp.quoteGasPayment(destination, GAS_LIMIT_REMOVEBORROWINGPOWER);
     }
 
     function handle(
@@ -65,10 +65,10 @@ contract Bridge {
     function AddBorrowingPowerSend(
         uint32 _destination,
         uint256 _DUSD_AMOUNT,
-        address _to,
-        address _borrowerAddress
+        address _borrower,
+        address _refundAddress
     ) external payable {
-        bytes memory message = abi.encode(1, _DUSD_AMOUNT, _to);
+        bytes memory message = abi.encode(1, _DUSD_AMOUNT, _borrower);
         bytes32 messageId = mailbox.dispatch(
             _destination,
             bytes32(abi.encode(this)),
@@ -85,10 +85,10 @@ contract Bridge {
     function RemoveBorrowingPowerSend(
         uint32 _destination,
         uint256 _DUSD_AMOUNT,
-        address _to,
-        address _borrowerAddress
+        address _borrower,
+        address _refundAddress
     ) external payable {
-        bytes memory message = abi.encode(2, _DUSD_AMOUNT, _to);
+        bytes memory message = abi.encode(2, _DUSD_AMOUNT, _borrower);
         bytes32 messageId = mailbox.dispatch(
             _destination,
             bytes32(abi.encode(this)),
