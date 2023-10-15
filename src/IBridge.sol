@@ -14,13 +14,13 @@ interface IBridge is IMessageRecipient {
         uint32 _destination,
         uint256 _DUSD_AMOUNT,
         address _to,
-        address _refundAddress
+        address _borrowerAddress
     ) external payable;
 
     function RemoveBorrowingPowerSend(
         uint32 _destination,
         uint256 _DUSD_AMOUNT,
         address _to,
-        address _refundAddress
+        address _borrowerAddress
     ) external payable;
 }

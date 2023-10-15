@@ -136,9 +136,6 @@ contract LendBorrow {
         uint256 loanUSD = borrowingPowerInUSD[msg.sender];
         dusdContract.mint(msg.sender,loanUSD);
 
-        //Reset the borrowing power
-        borrowingPowerInUSD[msg.sender]=0;
-
         // Associate Loan with borrowers address
         addressToAssociatedLoan[msg.sender]=loanUSD;
 
@@ -146,9 +143,11 @@ contract LendBorrow {
         OriginalToken memory token = ownerOfOrignalTokens[msg.sender];
         address tokenContractAddress = token.tokenAddress;
         uint256 token_id = token.tokenId;
-
-        // Then take the bytes32 of abi.encode(token_id,tokenContractAddress) and store associated loan to NFT.
+        // Then take the bytes32 of abi.encode(token_id,tokenContractAddress) and associate loan to NFT cause ehen any user wanna liquidate nft we can use this info to calculate HF in liquidation.
         bytes32OfTokenToAssociatedLoan[bytes32(abi.enocde(token_id,tokenContractAddress))] = loanUSD;
+
+        //Reset the borrowing power
+        borrowingPowerInUSD[msg.sender]=0;
 
         // Removing borrowing power on all chain
         for (uint i = 0; i < chainIds.length; i++){
