@@ -1,13 +1,13 @@
 
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.18;
+pragma solidity ^0.8.20;
 
 import "./LendBorrow.sol";
 import "./IBridge.sol";
 import "./IInterchainGasPaymaster.sol";
 import "./IMailbox.sol";
 
-pragma solidity ^0.8.18;
+
 
 contract Bridge {
     uint256 private GAS_LIMIT_ADDBORROWINGPOWER = 1000000;
@@ -54,10 +54,10 @@ contract Bridge {
         );
         if (messageType == 1) {
             // AddBorrowingPower
-            lendBorrow.addBorrowingPowerByBridge(borrowerAddress, DUSD_AMOUNT, _origin);
+            lendBorrow.addBorrowingPowerByBridge(borrowerAddress, DUSD_AMOUNT );
         } else if (messageType == 2) {
             // RemoveBorrowingPower
-            lendBorrow.removeBorrowingPowerByBridge(borrowerAddress, DUSD_AMOUNT, _origin);
+            lendBorrow.removeBorrowingPowerByBridge(borrowerAddress);
         } 
     }
 

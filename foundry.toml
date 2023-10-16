@@ -4,3 +4,4 @@ out = "out"
 libs = ["lib"]
 remappings = ['@openzeppelin/contracts/=lib/openzeppelin-contracts/contracts/']
 # See more config options https://github.com/foundry-rs/foundry/tree/master/config
+rpc_endpoints = { sepolia = "https://gateway.tenderly.co/public/sepolia", mumbai = "https://rpc.ankr.com/polygon_mumbai", bsc_test = "https://bsc-testnet.publicnode.com"}

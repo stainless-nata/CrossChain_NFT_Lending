@@ -7,9 +7,8 @@ import "./IBridge.sol";
 import "./IInterchainGasPaymaster.sol";
 import "./IMailbox.sol";
 
-pragma solidity ^0.8.18;
 
-contract Bridge {
+contract IBridge {
     uint256 private GAS_LIMIT_ADDBORROWINGPOWER = 1000000;
     uint256 private GAS_LIMIT_REMOVEBORROWINGPOWER = 1000000;
 

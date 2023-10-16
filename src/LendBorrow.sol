@@ -3,38 +3,17 @@ pragma solidity ^0.8.20;
 
 /* Imports Here */
 import {IBridge} from "./IBridge.sol";
-import {IERC721} from "lib/openzeppelin-contracts/contracts/token/ERC721";
+import {IERC721} from "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import {DUSD} from "./DUSD.sol";
 
-
 contract LendBorrow {
-    /*Custom Errors */
-    error LendBorrow_AddressIsNotOwner_Error();
-    error LendBorrow_BridgeAlreadyExists_Error();
-    error LendBorrow_ContractIsNotAllowedToPullToken();
-    error LendBorrow_TokenDoesNotHaveWorthInContrat();
-    error LendBorrow_UserDoesNotHaveBorrowingPower();
-    error LendBorrow_NFTDoesNotLendOnThisChain();
-    error LendBorrow_UserDoesNotHaveSufficientTokensToBurn();
-    error LendBorrow_UserDoesNotHaveAnyLoanPending();
-    /* Type Declarations */
-    struct OriginalToken {
-        address tokenAddress;
-        uint256 tokenId;
-    }
-
-    /*
-    0 => Goerli
-    80001 => Mumbai 
-    97 => BSC Testnet
-    */
-    uint32[3] public chainIds  = [5,80001,97];
 
     /* State Variables */
     address public immutable i_owner;
     address payable public bridge;
-    address payable public dusd_Address;
-    DUSD public dusdContract;
+   
+    DUSD dusdContract;
+    
     address public DAO_CONTRACT_ADDRESS = 0x017c6CdD043aEF7e3F4400362CbE0dE0D2Cfd050;
 
     // Using it so that user can get back his NFT after repaying loan
@@ -54,41 +33,73 @@ contract LendBorrow {
 
     mapping(bytes32=>uint256)public bytes32OfTokenToFloorPriceOfTokenAtTimeOfDepositing;
 
+     /*Custom Errors */
+    error LendBorrow_AddressIsNotOwner_Error();
+    error LendBorrow_AddressIsNotBridge_Error();
+    error LendBorrow_BridgeAlreadyExists_Error();
+    error LendBorrow_ContractIsNotAllowedToPullToken();
+    error LendBorrow_TokenDoesNotHaveWorthInContrat();
+    error LendBorrow_UserDoesNotHaveBorrowingPower();
+    error LendBorrow_NFTDoesNotLendOnThisChain();
+    error LendBorrow_UserDoesNotHaveSufficientTokensToBurn();
+    error LendBorrow_UserDoesNotHaveAnyLoanPending();
+
+        /*
+    0 => Goerli
+    80001 => Mumbai 
+    97 => BSC Testnet
+    */
+    uint32[3] public chainIds  = [5,80001,97];
+
+        /* Type Declarations */
+    struct OriginalToken {
+        address tokenAddress;
+        uint256 tokenId;
+    }
+
+    modifier ownerOnly {
+        require(msg.sender == i_owner,"LendBorrow_AddressIsNotOwner_Error");
+         _;
+    }
+
+    modifier bridgeOnly {
+        require(msg.sender == bridge,"LendBorrow_AddressIsNotBridge_Error");
+         _;
+    }
+
     /* Constructor */
     constructor(address _owner) {
         i_owner = _owner;
-        dusdContract = new DUSD();
+        dusdContract =new DUSD();
     }
-
-    function setBridge(address payable _bridge) external {
-        if (msg.sender != i_owner) {
-            revert LendBorrow_AddressIsNotOwner_Error();
-        }
+/* audit todo: access controll missing */
+    function setBridge(address payable _bridge) external ownerOnly{
+       
         if (bridge != address(0)) {
             revert LendBorrow_BridgeAlreadyExists_Error();
         }
+
         bridge = _bridge;
     }
-
-    function floorPriceOfNFT(address tokenContractAddress, uint256 tokenID, uint256 DUSD_NFT_WORTH) public returns(uint256){
-        if(msg.sender != i_owner){
-            revert LendBorrow_AddressIsNotOwner_Error();
-        }
+/* audit todo: access controll missing */
+    function floorPriceOfNFT(address tokenContractAddress, uint256 tokenID, uint256 DUSD_NFT_WORTH) public ownerOnly returns(uint256){
         bytes32 tokenBytes32Value =calculateBytes32ValueFromTokenWithoutBorrower(tokenID,tokenContractAddress);
 
         bytes32OfTokenToFloorPriceOfTokenAtTimeOfDepositing[tokenBytes32Value] = DUSD_NFT_WORTH;
         return(DUSD_NFT_WORTH);
 
     }
-
-    function setTokenValue(address tokenContractAddress, uint256 tokenID) external {
+/* audit todo: access controll missing */
+    function setTokenValue(address tokenContractAddress, uint256 tokenID) internal {
         bytes32 bytesValue = calculateBytes32ValueFromTokenWithoutBorrower(tokenID, tokenContractAddress);
         uint256 DUSDBorrowableAmount = (bytes32OfTokenToFloorPriceOfTokenAtTimeOfDepositing[bytesValue] * 7e17) / 10;
         contractAddressToTokenIdToDUSDBorrowableAmount[tokenContractAddress][tokenID] = DUSDBorrowableAmount;
     }
 
     // Native Chain function only
-    function depositNFT(address tokenContractAddress, uint256 tokenID) external {
+    function depositNFT(address tokenContractAddress, uint256 tokenID) external ownerOnly{
+
+        setTokenValue(tokenContractAddress,tokenID);
 
         /* Dev replace this function with actual security check in future */
         if(contractAddressToTokenIdToDUSDBorrowableAmount[tokenContractAddress][tokenID]==0){
@@ -101,6 +112,9 @@ contract LendBorrow {
         ) {
             revert LendBorrow_ContractIsNotAllowedToPullToken();
         }
+
+       
+
 
         // Transfer NFT ownership to this contract
         IERC721(tokenContractAddress).transferFrom(
@@ -146,7 +160,7 @@ contract LendBorrow {
 
         // Get the borowing power and mint usd on that borrowers address
         uint256 loanDUSD = borrowingPowerInUSD[msg.sender];
-        dusdContract.mint(msg.sender,loanDUSD);
+        DUSD(dusdContract).mint(msg.sender,loanDUSD);
 
         if(ownerOfOrignalTokens[msg.sender].tokenId != 0){
             makeReadyToAcceptLoanAmountWhenTokensWherePulledFromMainChain(msg.sender,loanDUSD);
@@ -170,7 +184,7 @@ contract LendBorrow {
         }
     }
 
-    function addBorrowingPowerByBridge(address borrowerAddress,uint256 DUSD_AMOUNT) external{
+    function addBorrowingPowerByBridge(address borrowerAddress,uint256 DUSD_AMOUNT) external bridgeOnly {
         require(
             msg.sender == bridge,
             "ERC721Multichain: Only bridge can call this function"
@@ -179,12 +193,8 @@ contract LendBorrow {
         borrowingPowerInUSD[borrowerAddress] = DUSD_AMOUNT;
     }
 
-    function removeBorrowingPowerByBridge(address borrowerAddress) external{
-        require(
-            msg.sender == bridge,
-            "ERC721Multichain: Only bridge can call this function"
-        );
-        
+    function removeBorrowingPowerByBridge(address borrowerAddress) external bridgeOnly {
+          
         // Check if the Borrower has borrowing power or not
         uint256 loanDUSD = borrowingPowerInUSD[borrowerAddress];
         if(loanDUSD==0){
@@ -246,34 +256,35 @@ contract LendBorrow {
 
     }
 
-    function repayLoan() external{
-        if (ownerOfOrignalTokens[msg.sender].tokenId == 0) {
+    function repayLoan(address _borrower) external{
+        require(_borrower != address(0),"Not Allowed");
+        if (ownerOfOrignalTokens[_borrower].tokenId == 0) {
             revert LendBorrow_NFTDoesNotLendOnThisChain();
         }
-        if(addressToAssociatedLoan[msg.sender]>0){
+        if(addressToAssociatedLoan[_borrower]>0){
             revert LendBorrow_UserDoesNotHaveAnyLoanPending();
         }
-        uint256 loanToPay = addressToAssociatedLoan[msg.sender];
+        uint256 loanToPay = addressToAssociatedLoan[_borrower];
 
-        if(dusdContract.balanceOf(msg.sender)>=loanToPay){
+        if(DUSD(dusdContract).balanceOf(_borrower)>=loanToPay){
             revert LendBorrow_UserDoesNotHaveSufficientTokensToBurn();
         }
-        dusdContract.burn(msg.sender, loanToPay);
+        DUSD(dusdContract).burn(_borrower, loanToPay);
 
         // Move NFT back to msg.msg.sender
-        IERC721(ownerOfOrignalTokens[msg.sender].tokenAddress).safeTransferFrom(
+        IERC721(ownerOfOrignalTokens[_borrower].tokenAddress).safeTransferFrom(
             address(this),
             msg.sender,
-            ownerOfOrignalTokens[msg.sender].tokenId
+            ownerOfOrignalTokens[_borrower].tokenId
         );
 
-        addressToAssociatedLoan[msg.sender] = 0;
+        addressToAssociatedLoan[_borrower] = 0;
 
-        bytes32 bytes32OftokenAndTokenContractAddress = calculateBytes32ValueFromTokenIdAndTokenContractAddress(msg.sender);
+        bytes32 bytes32OftokenAndTokenContractAddress = calculateBytes32ValueFromTokenIdAndTokenContractAddress(_borrower);
 
         bytes32OfTokenToAssociatedLoan[bytes32OftokenAndTokenContractAddress] = 0 ;
 
-        ownerOfOrignalTokens[msg.sender] = OriginalToken(address(0), 0);   
+        ownerOfOrignalTokens[_borrower] = OriginalToken(address(0), 0);   
         
     }
 
