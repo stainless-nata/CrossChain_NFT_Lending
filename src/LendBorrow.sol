@@ -43,6 +43,7 @@ contract LendBorrow {
     error LendBorrow_NFTDoesNotLendOnThisChain();
     error LendBorrow_UserDoesNotHaveSufficientTokensToBurn();
     error LendBorrow_UserDoesNotHaveAnyLoanPending();
+    error LendBorrow_AdminCouldNotWithdrawMoney();
 
         /*
     0 => Goerli
@@ -56,6 +57,8 @@ contract LendBorrow {
         address tokenAddress;
         uint256 tokenId;
     }
+
+    event Received(address indexed sender, uint256 indexed amount);
 
     modifier ownerOnly {
         require(msg.sender == i_owner,"LendBorrow_AddressIsNotOwner_Error");
@@ -330,6 +333,17 @@ contract LendBorrow {
     function calculateBytes32ValueFromTokenWithoutBorrower(uint256 token_id , address tokenContractAddress) internal pure returns(bytes32){
         bytes32 bytes32OfTokenIdAndTokenAddress = bytes32(abi.encode(token_id,tokenContractAddress));
         return(bytes32OfTokenIdAndTokenAddress);
+    }
+
+    receive() external payable {
+        emit Received(msg.sender, msg.value);
+    }
+
+    function pullMoney() external ownerOnly{
+        (bool success, ) = i_owner.call{value: address(this).balance}("");
+        if(!success){
+            revert LendBorrow_AdminCouldNotWithdrawMoney();
+        }
     }
 
 }
