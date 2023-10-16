@@ -16,7 +16,7 @@ contract CounterTest is Test {
 
     function setUp() public {}
 
-    function testBorrow() public {
+    function testDeposit() public {
         vm.createSelectFork("sepolia");
         vm.deal(address(owner), 1000 ether);
         vm.startPrank(owner);

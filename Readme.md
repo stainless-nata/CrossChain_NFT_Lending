@@ -85,4 +85,4 @@ POC
         + When paying back the user will call transfer function from the DUSD contract will transfer equivalent amount to contract
 
     4. DAO.sol
-    // Azhar bhai will decide what to do with that NFT
+    // We have to do
