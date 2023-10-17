@@ -56,6 +56,8 @@ modifier ownerOnly {
         bytes32 _sender,
         bytes calldata _message
     ) external {
+        _origin; //to avoid compiler warning
+
         require(
             msg.sender == address(mailbox),
             "Bridge: Only mailbox can call this function"
