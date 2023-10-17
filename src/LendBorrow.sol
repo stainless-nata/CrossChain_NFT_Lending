@@ -14,7 +14,7 @@ contract LendBorrow {
    
     DUSD dusdContract;
     
-    address public DAO_CONTRACT_ADDRESS = 0x017c6CdD043aEF7e3F4400362CbE0dE0D2Cfd050;
+    address public DAO_CONTRACT_ADDRESS;
 
     // Using it so that user can get back his NFT after repaying loan
     mapping(address => OriginalToken) public ownerOfOrignalTokens;
@@ -43,6 +43,7 @@ contract LendBorrow {
     error LendBorrow_NFTDoesNotLendOnThisChain();
     error LendBorrow_UserDoesNotHaveSufficientTokensToBurn();
     error LendBorrow_UserDoesNotHaveAnyLoanPending();
+    error LendBorrow_AdminCouldNotWithdrawMoney();
 
         /*
     0 => Goerli
@@ -57,6 +58,8 @@ contract LendBorrow {
         uint256 tokenId;
     }
 
+     event Received(address indexed sender, uint256 indexed amount);
+
     modifier ownerOnly {
         require(msg.sender == i_owner,"LendBorrow_AddressIsNotOwner_Error");
          _;
@@ -70,9 +73,10 @@ contract LendBorrow {
     /* Constructor */
     constructor(address _owner) {
         i_owner = _owner;
+        DAO_CONTRACT_ADDRESS = _owner;
         dusdContract =new DUSD();
     }
-/* audit todo: access controll missing */
+
     function setBridge(address payable _bridge) external ownerOnly{
        
         if (bridge != address(0)) {
@@ -81,7 +85,7 @@ contract LendBorrow {
 
         bridge = _bridge;
     }
-/* audit todo: access controll missing */
+
     function floorPriceOfNFT(address tokenContractAddress, uint256 tokenID, uint256 DUSD_NFT_WORTH) public ownerOnly returns(uint256){
         bytes32 tokenBytes32Value =calculateBytes32ValueFromTokenWithoutBorrower(tokenID,tokenContractAddress);
 
@@ -89,7 +93,7 @@ contract LendBorrow {
         return(DUSD_NFT_WORTH);
 
     }
-/* audit todo: access controll missing */
+
     function setTokenValue(address tokenContractAddress, uint256 tokenID) internal {
         bytes32 bytesValue = calculateBytes32ValueFromTokenWithoutBorrower(tokenID, tokenContractAddress);
         uint256 DUSDBorrowableAmount = (bytes32OfTokenToFloorPriceOfTokenAtTimeOfDepositing[bytesValue] * 7e17) / 10;
@@ -261,12 +265,12 @@ contract LendBorrow {
         if (ownerOfOrignalTokens[_borrower].tokenId == 0) {
             revert LendBorrow_NFTDoesNotLendOnThisChain();
         }
-        if(addressToAssociatedLoan[_borrower]>0){
+        if(addressToAssociatedLoan[_borrower]<0){
             revert LendBorrow_UserDoesNotHaveAnyLoanPending();
         }
         uint256 loanToPay = addressToAssociatedLoan[_borrower];
 
-        if(DUSD(dusdContract).balanceOf(_borrower)>=loanToPay){
+        if(DUSD(dusdContract).balanceOf(_borrower)<loanToPay-1){
             revert LendBorrow_UserDoesNotHaveSufficientTokensToBurn();
         }
         DUSD(dusdContract).burn(_borrower, loanToPay);
@@ -330,6 +334,21 @@ contract LendBorrow {
     function calculateBytes32ValueFromTokenWithoutBorrower(uint256 token_id , address tokenContractAddress) internal pure returns(bytes32){
         bytes32 bytes32OfTokenIdAndTokenAddress = bytes32(abi.encode(token_id,tokenContractAddress));
         return(bytes32OfTokenIdAndTokenAddress);
+    }
+
+    receive() external payable {
+        emit Received(msg.sender, msg.value);
+    }
+
+    function pullMoney() external ownerOnly{
+        (bool success, ) = i_owner.call{value: address(this).balance}("");
+        if(!success){
+            revert LendBorrow_AdminCouldNotWithdrawMoney();
+        }
+    }
+
+    function giveERC20TokensBalanceOfBorrower(address _borrower) external view returns(uint256){
+        return DUSD(dusdContract).balanceOf(_borrower);
     }
 
 }

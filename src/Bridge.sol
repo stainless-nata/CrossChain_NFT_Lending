@@ -7,20 +7,36 @@ import "./IBridge.sol";
 import "./IInterchainGasPaymaster.sol";
 import "./IMailbox.sol";
 
+/*
+    Sepolia (Config)
 
+    mailbox = 0xCC737a94FecaeC165AbCf12dED095BB13F037685
+    igp = 0x8f9C3888bFC8a5B25AED115A82eCbb788b196d2a
+*/
 
 contract Bridge {
     uint256 private GAS_LIMIT_ADDBORROWINGPOWER = 1000000;
     uint256 private GAS_LIMIT_REMOVEBORROWINGPOWER = 1000000;
 
+    address public immutable i_owner;
     IMailbox public mailbox;
     IInterchainGasPaymaster public igp;
     LendBorrow public lendBorrow;
 
-    constructor(address _mailbox, address _igp, address _lendBorrow) {
+modifier ownerOnly {
+        require(msg.sender == i_owner,"AddressIsNotOwner_Error");
+         _;
+    }
+
+    constructor(address _mailbox, address _igp, address payable _lendBorrow) {
         mailbox = IMailbox(_mailbox);
         igp = IInterchainGasPaymaster(_igp);
         lendBorrow = LendBorrow(_lendBorrow);
+        i_owner = msg.sender;
+    }
+
+    function updatelendBorrowAddress(address payable _lendBorrow) external ownerOnly {
+    lendBorrow = LendBorrow(_lendBorrow);
     }
 
     function quoteFeeAddBorrowingPowerSend(

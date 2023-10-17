@@ -16,7 +16,7 @@ contract IBridge {
     IInterchainGasPaymaster public igp;
     LendBorrow public lendBorrow;
 
-    constructor(address _mailbox, address _igp, address _lendBorrow) {
+    constructor(address _mailbox, address _igp, address payable _lendBorrow) {
         mailbox = IMailbox(_mailbox);
         igp = IInterchainGasPaymaster(_igp);
         lendBorrow = LendBorrow(_lendBorrow);

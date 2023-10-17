@@ -2,9 +2,9 @@
 pragma solidity ^0.8.20;
 
 import "forge-std/Test.sol";
-import "../src/LendBorrow.sol";
-import "../src/Bridge.sol";
-import "../src/NFT.sol";
+import "../../src/LendBorrow.sol";
+import "../../src/Bridge.sol";
+import "../../src/NFT.sol";
 
 contract CounterTest is Test {
     LendBorrow lendborrowcontract;
@@ -24,7 +24,7 @@ contract CounterTest is Test {
         bridge = new Bridge(
             0xCC737a94FecaeC165AbCf12dED095BB13F037685,
             0x8f9C3888bFC8a5B25AED115A82eCbb788b196d2a,
-            address(lendborrowcontract)
+            payable(address(lendborrowcontract))
         );
         // vm.deal(payable(address(bridge)),1 ether);
         vm.deal(payable(address(lendborrowcontract)),1 ether);
