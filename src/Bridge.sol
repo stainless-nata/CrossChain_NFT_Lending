@@ -7,7 +7,12 @@ import "./IBridge.sol";
 import "./IInterchainGasPaymaster.sol";
 import "./IMailbox.sol";
 
+/*
+    Sepolia (Config)
 
+    mailbox = 0xCC737a94FecaeC165AbCf12dED095BB13F037685
+    igp = 0x8f9C3888bFC8a5B25AED115A82eCbb788b196d2a
+*/
 
 contract Bridge {
     uint256 private GAS_LIMIT_ADDBORROWINGPOWER = 1000000;

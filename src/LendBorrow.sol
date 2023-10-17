@@ -58,7 +58,7 @@ contract LendBorrow {
         uint256 tokenId;
     }
 
-    event Received(address indexed sender, uint256 indexed amount);
+     event Received(address indexed sender, uint256 indexed amount);
 
     modifier ownerOnly {
         require(msg.sender == i_owner,"LendBorrow_AddressIsNotOwner_Error");
@@ -264,12 +264,12 @@ contract LendBorrow {
         if (ownerOfOrignalTokens[_borrower].tokenId == 0) {
             revert LendBorrow_NFTDoesNotLendOnThisChain();
         }
-        if(addressToAssociatedLoan[_borrower]>0){
+        if(addressToAssociatedLoan[_borrower]<0){
             revert LendBorrow_UserDoesNotHaveAnyLoanPending();
         }
         uint256 loanToPay = addressToAssociatedLoan[_borrower];
 
-        if(DUSD(dusdContract).balanceOf(_borrower)>=loanToPay){
+        if(DUSD(dusdContract).balanceOf(_borrower)<loanToPay-1){
             revert LendBorrow_UserDoesNotHaveSufficientTokensToBurn();
         }
         DUSD(dusdContract).burn(_borrower, loanToPay);
@@ -344,6 +344,10 @@ contract LendBorrow {
         if(!success){
             revert LendBorrow_AdminCouldNotWithdrawMoney();
         }
+    }
+
+    function giveERC20TokensBalanceOfBorrower(address _borrower) external view returns(uint256){
+        return DUSD(dusdContract).balanceOf(_borrower);
     }
 
 }
