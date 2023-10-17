@@ -14,7 +14,7 @@ contract LendBorrow {
    
     DUSD dusdContract;
     
-    address public DAO_CONTRACT_ADDRESS = 0x017c6CdD043aEF7e3F4400362CbE0dE0D2Cfd050;
+    address public DAO_CONTRACT_ADDRESS;
 
     // Using it so that user can get back his NFT after repaying loan
     mapping(address => OriginalToken) public ownerOfOrignalTokens;
@@ -73,9 +73,10 @@ contract LendBorrow {
     /* Constructor */
     constructor(address _owner) {
         i_owner = _owner;
+        DAO_CONTRACT_ADDRESS = _owner;
         dusdContract =new DUSD();
     }
-/* audit todo: access controll missing */
+
     function setBridge(address payable _bridge) external ownerOnly{
        
         if (bridge != address(0)) {
@@ -84,7 +85,7 @@ contract LendBorrow {
 
         bridge = _bridge;
     }
-/* audit todo: access controll missing */
+
     function floorPriceOfNFT(address tokenContractAddress, uint256 tokenID, uint256 DUSD_NFT_WORTH) public ownerOnly returns(uint256){
         bytes32 tokenBytes32Value =calculateBytes32ValueFromTokenWithoutBorrower(tokenID,tokenContractAddress);
 
@@ -92,7 +93,7 @@ contract LendBorrow {
         return(DUSD_NFT_WORTH);
 
     }
-/* audit todo: access controll missing */
+
     function setTokenValue(address tokenContractAddress, uint256 tokenID) internal {
         bytes32 bytesValue = calculateBytes32ValueFromTokenWithoutBorrower(tokenID, tokenContractAddress);
         uint256 DUSDBorrowableAmount = (bytes32OfTokenToFloorPriceOfTokenAtTimeOfDepositing[bytesValue] * 7e17) / 10;
