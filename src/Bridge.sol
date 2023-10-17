@@ -18,14 +18,25 @@ contract Bridge {
     uint256 private GAS_LIMIT_ADDBORROWINGPOWER = 1000000;
     uint256 private GAS_LIMIT_REMOVEBORROWINGPOWER = 1000000;
 
+    address public immutable i_owner;
     IMailbox public mailbox;
     IInterchainGasPaymaster public igp;
     LendBorrow public lendBorrow;
+
+modifier ownerOnly {
+        require(msg.sender == i_owner,"AddressIsNotOwner_Error");
+         _;
+    }
 
     constructor(address _mailbox, address _igp, address payable _lendBorrow) {
         mailbox = IMailbox(_mailbox);
         igp = IInterchainGasPaymaster(_igp);
         lendBorrow = LendBorrow(_lendBorrow);
+        i_owner = msg.sender;
+    }
+
+    function updatelendBorrowAddress(address payable _lendBorrow) external ownerOnly {
+    lendBorrow = LendBorrow(_lendBorrow);
     }
 
     function quoteFeeAddBorrowingPowerSend(
